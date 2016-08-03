@@ -1,6 +1,6 @@
 import scrapy
 import re
-from tutorial.items import Module
+from tutorial.items import Module, ModuleLoader
 
 
 class NtuSpider(scrapy.Spider):
@@ -47,23 +47,18 @@ class NtuSpider(scrapy.Spider):
 
         for mod in modulesListUnprocessed:
             # each mod is a module
-            item = Module()
+            loader = ModuleLoader(Module(), mod)
             # first row contains code, title
             # credit and department
             firstRow = mod[0].xpath('.//font/text()').extract()
-            item['code'] = firstRow[0]
-            item['title'] = firstRow[1]
-            item['credit'] = firstRow[2].strip()
-            item['department'] = firstRow[3]
+            loader.add_value('code', firstRow[0])
+            loader.add_value('title', firstRow[1])
+            loader.add_value('credit', firstRow[2])
+            loader.add_value('department', firstRow[3])
 
             # second row onwards contains prerequisites,
             # gradeType, preclusion and availability
             # which can take up several rows
-            prerequisites = []
-            gradeType = []
-            preclusion = []
-            availability = []
-            description = []
             for i in xrange(1, len(mod)):
                 row = mod[i].xpath('.//font')
                 for data in row:
@@ -73,35 +68,15 @@ class NtuSpider(scrapy.Spider):
                         continue
                     data = data.extract()
                     if ('#FF00FF' in data):
-                        prerequisites.extend(requirement)
+                        loader.add_value('prerequisite', requirement)
                     elif ('RED' in data):
-                        gradeType.extend(requirement)
+                        loader.add_value('gradeType', requirement)
                     elif ('BROWN' in data):
-                        preclusion.extend(requirement)
+                        loader.add_value('preclusion', requirement)
                     elif ('GREEN' in data):
-                        availability.extend(requirement)
+                        loader.add_value('availability', requirement)
                     elif i == len(mod) - 1:
-                        for subdata in requirement:
-                            description.append(self.clean(subdata))
+                        loader.add_value('description', requirement)
                     else:
                         self.logger.warning('Found unexpected %s', data)
-
-            prerequisites = self.conditionalConcat(
-                prerequisites, 'Prerequisite:')
-            gradeType = self.conditionalConcat(gradeType, 'Grade Type: ')
-            preclusion = self.conditionalConcat(
-                preclusion, 'Mutually exclusive with: ')
-            description = self.conditionalConcat(description, '')
-
-            # replace OR with lower cased ones
-            prerequisites = prerequisites.replace(' OR', ' or ')
-            # change(corequisite) to change (corequisite)
-            prerequisites = re.sub(r'(?<=\S)\(', ' (', prerequisites)
-
-            item['description'] = description.strip()
-            item['prerequisite'] = prerequisites
-            item['gradeType'] = gradeType
-            item['preclusion'] = preclusion
-            item['availability'] = availability
-
-            yield item
+            yield loader.load_item()
