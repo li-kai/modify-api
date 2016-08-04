@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import psycopg2
-import settings.DATABASE as DATABASE
+from settings import DATABASE
 # Define your item pipelines here
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
@@ -15,27 +15,13 @@ class ModulesPipeline(object):
         Initializes database connection.
         """
         try:
-            conn = psycopg2.connect(
+            self.connection = psycopg2.connect(
                 database=DATABASE['database'],
                 user=DATABASE['username'],
                 password=DATABASE['password'],
+                host=DATABASE['host']
             )
-            cursor = conn.cursor()
-            cursor.execute("CREATE TABLE IF NOT EXISTS modify ("
-                           "id serial PRIMARY KEY,"
-                           "code text NOT NULL,"
-                           "title text NOT NULL,"
-                           "department text NOT NULL,"
-                           "description text NOT NULL,"
-                           "credit real NOT NULL,"
-                           "prerequisite text,"
-                           "preclusion text,"
-                           "availability text,"
-                           "gradeType text"
-                           ");"
-                           )
-
-            self.Cursor = cursor
+            self.cursor = self.connection.cursor()
         except Exception, e:
             raise e
 
@@ -45,28 +31,65 @@ class ModulesPipeline(object):
         This method is called for every item pipeline component.
 
         """
-
         try:
-            cursor = self.Cursor()
-            cursor.execute("INSERT INTO modify ("
-                           "code,"
-                           "title,"
-                           "credit,"
-                           "gradeType,"
-                           "department,"
-                           "prerequisite,"
-                           "preclusion,"
-                           "availability,"
-                           "description"
-                           ") VALUES (%s, %s)"
-                           "ON CONFLICT (key) DO UPDATE",
-                           (100, "abc'def")
-                           )
-            cursor.commit()
-        except:
-            cursor.rollback()
+            self.cursor.execute(
+                '''
+                INSERT INTO ntu (
+                code,
+                title,
+                credit,
+                gradeType,
+                department,
+                prerequisite,
+                preclusion,
+                availability,
+                description
+                ) values (
+                %s, %s, %s,
+                %s, %s, %s,
+                %s, %s, %s
+                ) ON CONFLICT (code) DO UPDATE SET (
+                title,
+                credit,
+                gradeType,
+                department,
+                prerequisite,
+                preclusion,
+                availability,
+                description
+                ) = (
+                EXCLUDED.title,
+                EXCLUDED.credit,
+                EXCLUDED.gradeType,
+                EXCLUDED.department,
+                EXCLUDED.prerequisite,
+                EXCLUDED.preclusion,
+                EXCLUDED.availability,
+                EXCLUDED.description
+                );
+                ''',
+                (item.get('code'),
+                 item.get('title'),
+                 item.get('credit'),
+                 item.get('gradeType'),
+                 item.get('department'),
+                 item.get('prerequisite'),
+                 item.get('preclusion'),
+                 item.get('availability'),
+                 item.get('description'),
+                 )
+            )
+            self.connection.commit()
+        except psycopg2.DatabaseError, e:
+            print "Error: %s" % e
+            self.connection.rollback()
             raise
-        finally:
-            cursor.close()
 
         return item
+
+    def close_spider(self, spider):
+        try:
+            self.cursor.close()
+            self.connection.close()
+        except Exception, e:
+            raise e

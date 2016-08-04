@@ -1,4 +1,5 @@
 import scrapy
+from titlecase import titlecase
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import Identity, MapCompose, Join
 import re
@@ -20,15 +21,23 @@ def filterWord(rule):
     return lambda x: None if x == rule else x
 
 
-def cleanPrerequisite(x):
-    return re.sub(r'(?<=\S)\(', ' (', x)
+def upperRoman(word):
+    if word in {'Ii', 'Iii', 'Iv', 'Vi', 'Vii', 'Viii', 'Ix'}:
+        word = word.upper()
+    return word
 
 
 class ModuleLoader(ItemLoader):
     default_input_processor = MapCompose(unicode.strip)
     default_output_processor = Join('')
 
-    title_in = MapCompose(unicode.title, unicode.strip)
+    title_in = MapCompose(
+        unicode.strip,
+        # proper titlecase
+        titlecase,
+        # turns roman chars to UPPER casing
+        lambda x: ' '.join([upperRoman(word) for word in x.split(' ')])
+    )
 
     gradeType_in = MapCompose(filterWord('Grade Type: '))
     prerequisite_in = MapCompose(
