@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 import psycopg2
 from settings import DATABASE
-# Define your item pipelines here
-#
-# Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
 
-class ModulesPipeline(object):
-    """Livingsocial pipeline for storing scraped items in the database"""
+class NtuDetailsPipeline(object):
+    """NtuDetailsPipeline pipeline for storing scraped items in the database"""
 
     def __init__(self):
         """

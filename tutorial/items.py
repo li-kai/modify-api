@@ -5,7 +5,7 @@ from scrapy.loader.processors import Identity, MapCompose, Join
 import re
 
 
-class Module(scrapy.Item):
+class NtuDetails(scrapy.Item):
     code = scrapy.Field()
     title = scrapy.Field()
     credit = scrapy.Field()
@@ -27,7 +27,7 @@ def upperRoman(word):
     return word
 
 
-class ModuleLoader(ItemLoader):
+class NtuDetailsLoader(ItemLoader):
     default_input_processor = MapCompose(unicode.strip)
     default_output_processor = Join('')
 

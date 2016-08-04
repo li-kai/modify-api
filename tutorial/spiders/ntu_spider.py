@@ -1,10 +1,9 @@
 import scrapy
-import re
-from tutorial.items import Module, ModuleLoader
+from tutorial.items import NtuDetails, NtuDetailsLoader
 
 
-class NtuSpider(scrapy.Spider):
-    name = "ntu"
+class NtuDetailsSpider(scrapy.Spider):
+    name = "ntu_details"
     allowed_domains = ["wish.wis.ntu.edu.sg"]
     start_urls = [
         "https://wish.wis.ntu.edu.sg/webexe/owa/aus_subj_cont.main_display1?" +
@@ -13,29 +12,9 @@ class NtuSpider(scrapy.Spider):
     ]
     custom_settings = {
         'ITEM_PIPELINES': {
-            'tutorial.pipelines.ModulesPipeline': 400
+            'tutorial.pipelines.NtuDetailsPipeline': 400
         }
     }
-
-    # remove the title
-    # and join the strings
-    def conditionalConcat(self, listOfStrings, rule):
-        result = ''
-        for item in listOfStrings:
-            if (rule != item):
-                result += item
-        return result
-
-    def clean(self, str):
-        # turns 'man?s to man's and students? to students'
-        str = re.sub(r'\?(?=[sS])|(?<=[sS])\?', '\'', str)
-        # turns 'for example ? the' to 'for example - the'
-        str = re.sub(r' \? ', ' - ', str)
-        # turns multiple whitespace to a single space
-        str = re.sub('\s +', ' ', str)
-        # lastly replace tabs with space and
-        # strip starting and ending whitespace
-        return str.replace('\t', ' ').strip()
 
     def parse(self, response):
         hugeListUnprocessed = response.xpath(
@@ -52,7 +31,7 @@ class NtuSpider(scrapy.Spider):
 
         for mod in modulesListUnprocessed:
             # each mod is a module
-            loader = ModuleLoader(Module(), mod)
+            loader = NtuDetailsLoader(NtuDetails(), mod)
             # first row contains code, title
             # credit and department
             firstRow = mod[0].xpath('.//font/text()').extract()
