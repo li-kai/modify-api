@@ -11,6 +11,11 @@ class NtuSpider(scrapy.Spider):
         "acad=2016&semester=1&acadsem=2016;1&r_subj_code=" +
         "ACC" + "&boption=Search"
     ]
+    custom_settings = {
+        'ITEM_PIPELINES': {
+            'tutorial.pipelines.ModulesPipeline': 400
+        }
+    }
 
     # remove the title
     # and join the strings
