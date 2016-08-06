@@ -17,12 +17,6 @@ class NtuDetails(scrapy.Item):
     description = scrapy.Field()
 
 
-class NtuTimetable(scrapy.Item):
-    code = scrapy.Field()
-    remark = scrapy.Field()
-    timetable = scrapy.Field()
-
-
 class NtuLesson(scrapy.Item):
     classNo = scrapy.Field()
     dayText = scrapy.Field()
@@ -31,6 +25,12 @@ class NtuLesson(scrapy.Item):
     startTime = scrapy.Field()
     endTime = scrapy.Field()
     venue = scrapy.Field()
+
+
+class NtuTimetables(scrapy.Item):
+    code = scrapy.Field()
+    remark = scrapy.Field()
+    timetable = scrapy.Field()
 
 
 def filterWord(rule):
@@ -43,10 +43,12 @@ def upperRoman(word):
     return word
 
 
-class NtuDetailsLoader(ItemLoader):
+class ModifyLoader(ItemLoader):
     default_input_processor = MapCompose(unicode.strip)
     default_output_processor = Join('')
 
+
+class NtuDetailsLoader(ModifyLoader):
     title_in = MapCompose(
         unicode.strip,
         # proper titlecase
@@ -79,9 +81,20 @@ class NtuDetailsLoader(ItemLoader):
     )
 
 
-class NtuTimetableLoader(ItemLoader):
-    default_input_processor = MapCompose(unicode.strip)
-    default_output_processor = Join('')
-
+class NtuTimetablesLoader(ModifyLoader):
     timetable_in = MapCompose()
     timetable_out = Identity()
+
+
+def parseWeekText(text):
+    if text == u'':
+        return u'Every week'
+    elif '-' in text or ',' in text:
+        return text.replace('Wk', 'Weeks ')\
+            .replace(',', ', ')
+    else:
+        return text.replace('Wk', 'Week ')
+
+
+class NtuLessonLoader(ModifyLoader):
+    weekText_in = MapCompose(unicode.strip, parseWeekText)

@@ -4,9 +4,8 @@ from settings import DATABASE
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
 
-class NtuDetailsPipeline(object):
-    """NtuDetailsPipeline pipeline for storing scraped items in the database"""
-
+class ModifyPipeline(object):
+    """docstring for ModifyPipeline"""
     def __init__(self):
         """
         Initializes database connection.
@@ -22,6 +21,17 @@ class NtuDetailsPipeline(object):
         except Exception, e:
             raise e
 
+    def close_spider(self, spider):
+        try:
+            self.cursor.close()
+            self.connection.close()
+        except Exception, e:
+            raise e
+
+
+class NtuDetailsPipeline(ModifyPipeline):
+    """NtuDetailsPipeline pipeline for storing scraped items in the database"""
+
     def process_item(self, item, spider):
         """Save modules in the database.
 
@@ -35,7 +45,7 @@ class NtuDetailsPipeline(object):
                 code,
                 title,
                 credit,
-                gradeType,
+                remarks,
                 department,
                 prerequisite,
                 preclusion,
@@ -48,7 +58,7 @@ class NtuDetailsPipeline(object):
                 ) ON CONFLICT (code) DO UPDATE SET (
                 title,
                 credit,
-                gradeType,
+                remarks,
                 department,
                 prerequisite,
                 preclusion,
@@ -57,7 +67,7 @@ class NtuDetailsPipeline(object):
                 ) = (
                 EXCLUDED.title,
                 EXCLUDED.credit,
-                EXCLUDED.gradeType,
+                EXCLUDED.remarks,
                 EXCLUDED.department,
                 EXCLUDED.prerequisite,
                 EXCLUDED.preclusion,
@@ -84,9 +94,29 @@ class NtuDetailsPipeline(object):
 
         return item
 
-    def close_spider(self, spider):
+
+class NtuTimetablesPipeline(ModifyPipeline):
+    """NtuDetailsPipeline pipeline for storing scraped items in the database"""
+
+    def process_item(self, item, spider):
+        """Save modules in the database.
+
+        This method is called for every item pipeline component.
+
+        """
         try:
-            self.cursor.close()
-            self.connection.close()
-        except Exception, e:
-            raise e
+            self.cursor.execute(
+                '''
+                UPDATE ntu
+                SET  remarks = CONCAT(%s, remarks)
+                WHERE code = %s
+                ''',
+                (item.get('remark'), item.get('code'))
+            )
+            self.connection.commit()
+        except psycopg2.DatabaseError, e:
+            print "Error: %s" % e
+            self.connection.rollback()
+            raise
+
+        return item
