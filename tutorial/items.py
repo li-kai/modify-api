@@ -17,6 +17,22 @@ class NtuDetails(scrapy.Item):
     description = scrapy.Field()
 
 
+class NtuTimetable(scrapy.Item):
+    code = scrapy.Field()
+    remark = scrapy.Field()
+    timetable = scrapy.Field()
+
+
+class NtuLesson(scrapy.Item):
+    classNo = scrapy.Field()
+    dayText = scrapy.Field()
+    lessonType = scrapy.Field()
+    weekText = scrapy.Field()
+    startTime = scrapy.Field()
+    endTime = scrapy.Field()
+    venue = scrapy.Field()
+
+
 def filterWord(rule):
     return lambda x: None if x == rule else x
 
@@ -61,3 +77,11 @@ class NtuDetailsLoader(ItemLoader):
         # strip starting and ending whitespace
         lambda x: x.replace('\t', ' ').strip()
     )
+
+
+class NtuTimetableLoader(ItemLoader):
+    default_input_processor = MapCompose(unicode.strip)
+    default_output_processor = Join('')
+
+    timetable_in = MapCompose()
+    timetable_out = Identity()
