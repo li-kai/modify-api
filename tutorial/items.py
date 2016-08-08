@@ -1,7 +1,8 @@
 import scrapy
 from titlecase import titlecase
 from scrapy.loader import ItemLoader
-from scrapy.loader.processors import Identity, MapCompose, Join
+from scrapy.loader.processors import (Identity, Compose,
+                                      MapCompose, Join, TakeFirst)
 import re
 
 
@@ -37,22 +38,59 @@ class NtuTimetables(scrapy.Item):
     timetable = scrapy.Field()
 
 
+def fixHumanWritenText(word):
+    # 'change(corequisite)' to 'change (corequisite)'
+    word = re.sub(r'(?<=\S)\(', ' (', word)
+    word = word.replace(' OR', ' or ')
+    # replace tabs with space
+    word = word.replace('\t', ' ')
+    # turns multiple whitespace to a single space
+    word = re.sub('\s +', ' ', word)
+    # add space before . , ; chars as needed
+    word = re.sub(r'([\.|;|,])(?=\w)', r'\1 ', word)
+    # minor fix
+    word = word.replace('i. e. ', 'i.e. ')
+    # turns 'man?s to man's and students? to students'
+    word = re.sub(r'\?(?=[sS])|(?<=[sS])\?', '\'', word)
+    # turns 'for example ? the' to 'for example - the'
+    word = re.sub(r' \? ', ' - ', word)
+    word = preventAllCaps(word)
+    return word
+
+
 def filterWord(rule):
     return lambda x: None if x == rule else x
 
 
 def upperRoman(word):
-    if word in {'Ii', 'Iii', 'Iv', 'Vi', 'Vii', 'Viii', 'Ix'}:
+    if word in {'Ii', 'Iia', 'Iib', 'Iii', 'Iv', 'Vi', 'Vii', 'Viii', 'Ix'}:
         word = word.upper()
     return word
+
+
+def concatenateAvail(word):
+    if 'Not available' in word:
+        return u'\n' + word
+    return word
+
+
+def preventAllCaps(sentence):
+    if sentence.isupper() and len(sentence) > 6 and '.' in sentence:
+        return unicode.capitalize(sentence)
+    return sentence
 
 
 class ModifyLoader(ItemLoader):
     default_input_processor = MapCompose(unicode.strip)
     default_output_processor = Join('')
+    year_in = Identity()
+    year_out = TakeFirst()
+    sem_in = Identity()
+    sem_out = TakeFirst()
 
 
 class NtuDetailsLoader(ModifyLoader):
+    joinThenStripWhitespace = Compose(lambda x: ''.join(x), unicode.strip)
     title_in = MapCompose(
         unicode.strip,
         # proper titlecase
@@ -62,26 +100,24 @@ class NtuDetailsLoader(ModifyLoader):
     )
 
     gradeType_in = MapCompose(filterWord('Grade Type: '))
-    prerequisite_in = MapCompose(
-        filterWord('Prerequisite:'),
-        # change(corequisite) to change (corequisite)
-        lambda x: re.sub(r'(?<=\S)\(', ' (', x),
-        lambda x: x.replace(' OR', ' or ')
-    )
-    preclusion_in = MapCompose(filterWord('Mutually exclusive with: '))
-    availability_out = Identity()
 
-    description_in = MapCompose(
-        # turns 'man?s to man's and students? to students'
-        lambda x: re.sub(r'\?(?=[sS])|(?<=[sS])\?', '\'', x),
-        # turns 'for example ? the' to 'for example - the'
-        lambda x: re.sub(r' \? ', ' - ', x),
-        # turns multiple whitespace to a single space
-        lambda x: re.sub('\s +', ' ', x),
-        # lastly replace tabs with space and
-        # strip starting and ending whitespace
-        lambda x: x.replace('\t', ' ').strip()
+    prerequisite_in = MapCompose(
+        lambda x: u'\n' if x == 'Prerequisite:' else x,
+        fixHumanWritenText
     )
+    prerequisite_out = joinThenStripWhitespace
+
+    preclusion_in = MapCompose(filterWord('Mutually exclusive with: '))
+
+    availability_in = MapCompose(
+        concatenateAvail,
+        preventAllCaps
+    )
+    availability_out = joinThenStripWhitespace
+    description_in = MapCompose(
+        fixHumanWritenText
+    )
+    description_out = joinThenStripWhitespace
 
 
 class NtuTimetablesLoader(ModifyLoader):

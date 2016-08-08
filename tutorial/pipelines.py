@@ -6,6 +6,7 @@ from settings import DATABASE
 
 class ModifyPipeline(object):
     """docstring for ModifyPipeline"""
+
     def __init__(self):
         """
         Initializes database connection.
@@ -31,6 +32,7 @@ class ModifyPipeline(object):
 
 class NtuDetailsPipeline(ModifyPipeline):
     """NtuDetailsPipeline pipeline for storing scraped items in the database"""
+    school = 'NTU'
 
     def process_item(self, item, spider):
         """Save modules in the database.
@@ -41,7 +43,8 @@ class NtuDetailsPipeline(ModifyPipeline):
         try:
             self.cursor.execute(
                 '''
-                INSERT INTO ntu_modules (
+                INSERT INTO modules (
+                school,
                 year,
                 sem,
                 code,
@@ -54,13 +57,11 @@ class NtuDetailsPipeline(ModifyPipeline):
                 availability,
                 description
                 ) values (
-                %s, %s,
+                %s, %s, %s,
                 %s, %s, %s,
                 %s, %s, %s,
                 %s, %s, %s
-                ) ON CONFLICT (code) DO UPDATE SET (
-                year,
-                sem,
+                ) ON CONFLICT (school, year, sem, code) DO UPDATE SET (
                 title,
                 credit,
                 remarks,
@@ -70,8 +71,6 @@ class NtuDetailsPipeline(ModifyPipeline):
                 availability,
                 description
                 ) = (
-                EXCLUDED.year,
-                EXCLUDED.sem,
                 EXCLUDED.title,
                 EXCLUDED.credit,
                 EXCLUDED.remarks,
@@ -82,7 +81,8 @@ class NtuDetailsPipeline(ModifyPipeline):
                 EXCLUDED.description
                 );
                 ''',
-                (item.get('year'),
+                (self.school,
+                 item.get('year'),
                  item.get('sem'),
                  item.get('code'),
                  item.get('title'),
@@ -105,7 +105,7 @@ class NtuDetailsPipeline(ModifyPipeline):
 
 
 class NtuTimetablesPipeline(ModifyPipeline):
-    """NtuDetailsPipeline pipeline for storing scraped items in the database"""
+    school = 'NTU'
 
     def process_item(self, item, spider):
         """Save modules in the database.
@@ -114,15 +114,57 @@ class NtuTimetablesPipeline(ModifyPipeline):
         try:
             self.cursor.execute(
                 '''
-                UPDATE ntu_modules
+                UPDATE modules
                 SET  remarks = CONCAT(%s, remarks)
-                WHERE code = %s AND year = %s AND sem = %s
+                WHERE school = %s AND code = %s AND year = %s AND sem = %s
                 ''',
-                (item.get('remark'), item.get('code'),
+                (item.get('remark'), self.school, item.get('code'),
                     item.get('year'), item.get('sem'))
             )
+
+            self.cursor.execute(
+                '''
+                DELETE FROM lessons
+                WHERE school = %s AND year = %s AND sem = %s;
+                ''',
+                (self.school, item.get('year'), item.get('sem'))
+            )
+
             for lesson in item.get('timetable'):
-                print lesson
+                self.cursor.execute(
+                    '''
+                    INSERT INTO lessons (
+                    school,
+                    year,
+                    sem,
+                    code,
+                    class_no,
+                    day_text,
+                    lesson_type,
+                    week_text,
+                    start_time,
+                    end_time,
+                    venue
+                    ) values (
+                    %s, %s, %s,
+                    %s, %s, %s,
+                    %s, %s, %s,
+                    %s, %s
+                    );
+                    ''',
+                    (self.school,
+                     item.get('year'),
+                     item.get('sem'),
+                     item.get('code'),
+                     lesson['classNo'],
+                     lesson['dayText'],
+                     lesson['lessonType'],
+                     lesson['weekText'],
+                     lesson['startTime'],
+                     lesson['endTime'],
+                     lesson['venue']
+                     )
+                )
             self.connection.commit()
         except psycopg2.DatabaseError, e:
             print "Error: %s" % e

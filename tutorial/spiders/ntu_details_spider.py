@@ -10,7 +10,7 @@ class NtuDetailsSpider(scrapy.Spider):
     start_urls = [
         "https://wish.wis.ntu.edu.sg/webexe/owa/aus_subj_cont.main_display1?"
         "acad=%(year)s&semester=%(sem)s&acadsem=%(year)s;1&r_subj_code="
-        "ACC&boption=Search"
+        "&boption=Search"
         % {'year': year, "sem": sem}
     ]
     custom_settings = {
@@ -56,16 +56,17 @@ class NtuDetailsSpider(scrapy.Spider):
                     if not requirement:
                         continue
                     data = data.extract()
-                    if ('#FF00FF' in data):
+                    if ('color="#FF00FF"' in data):
                         loader.add_value('prerequisite', requirement)
-                    elif ('RED' in data):
+                    elif ('color="RED"' in data):
                         loader.add_value('gradeType', requirement)
-                    elif ('BROWN' in data):
+                    elif ('color="BROWN"' in data):
                         loader.add_value('preclusion', requirement)
-                    elif ('GREEN' in data):
+                    elif ('color="GREEN"' in data):
                         loader.add_value('availability', requirement)
                     elif i == len(mod) - 1:
                         loader.add_value('description', requirement)
-                    else:
+                    '''else:
                         self.logger.warning('Found unexpected %s', data)
+                    '''
             yield loader.load_item()
