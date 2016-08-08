@@ -9,10 +9,11 @@ class NtuTimetablesSpider(scrapy.Spider):
     year = 2016
     sem = 1
     start_urls = [
-        "https://wish.wis.ntu.edu.sg/webexe/owa/AUS_SCHEDULE.main_display1?" +
-        "staff_access=false&acadsem=" + year + ";" + sem +
-        "&r_subj_code=ACC" +
+        "https://wish.wis.ntu.edu.sg/webexe/owa/AUS_SCHEDULE.main_display1?"
+        "staff_access=false&acadsem=%(year)s;%(sem)s"
+        "&r_subj_code=ACC"
         "&boption=Search&r_search_type=F"
+        % {'year': year, "sem": sem}
     ]
     custom_settings = {
         'ITEM_PIPELINES': {

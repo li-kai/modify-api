@@ -8,10 +8,10 @@ class NtuDetailsSpider(scrapy.Spider):
     year = 2016
     sem = 1
     start_urls = [
-        "https://wish.wis.ntu.edu.sg/webexe/owa/aus_subj_cont.main_display1?" +
-        "acad=" + year + "&semester=" + sem + "&acadsem=" +
-        year + ";1&r_subj_code=" +
-        "ACC" + "&boption=Search"
+        "https://wish.wis.ntu.edu.sg/webexe/owa/aus_subj_cont.main_display1?"
+        "acad=%(year)s&semester=%(sem)s&acadsem=%(year)s;1&r_subj_code="
+        "ACC&boption=Search"
+        % {'year': year, "sem": sem}
     ]
     custom_settings = {
         'ITEM_PIPELINES': {
