@@ -5,9 +5,12 @@ from tutorial.items import NtuDetails, NtuDetailsLoader
 class NtuDetailsSpider(scrapy.Spider):
     name = "ntu_details"
     allowed_domains = ["wish.wis.ntu.edu.sg"]
+    year = 2016
+    sem = 1
     start_urls = [
         "https://wish.wis.ntu.edu.sg/webexe/owa/aus_subj_cont.main_display1?" +
-        "acad=2016&semester=1&acadsem=2016;1&r_subj_code=" +
+        "acad=" + year + "&semester=" + sem + "&acadsem=" +
+        year + ";1&r_subj_code=" +
         "ACC" + "&boption=Search"
     ]
     custom_settings = {
@@ -35,6 +38,8 @@ class NtuDetailsSpider(scrapy.Spider):
             # first row contains code, title
             # credit and department
             firstRow = mod[0].xpath('.//font/text()').extract()
+            loader.add_value('year', self.year)
+            loader.add_value('sem', self.sem)
             loader.add_value('code', firstRow[0])
             loader.add_value('title', firstRow[1])
             loader.add_value('credit', firstRow[2])

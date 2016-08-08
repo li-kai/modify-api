@@ -41,7 +41,9 @@ class NtuDetailsPipeline(ModifyPipeline):
         try:
             self.cursor.execute(
                 '''
-                INSERT INTO ntu (
+                INSERT INTO ntu_modules (
+                year,
+                sem,
                 code,
                 title,
                 credit,
@@ -52,10 +54,13 @@ class NtuDetailsPipeline(ModifyPipeline):
                 availability,
                 description
                 ) values (
+                %s, %s,
                 %s, %s, %s,
                 %s, %s, %s,
                 %s, %s, %s
                 ) ON CONFLICT (code) DO UPDATE SET (
+                year,
+                sem,
                 title,
                 credit,
                 remarks,
@@ -65,6 +70,8 @@ class NtuDetailsPipeline(ModifyPipeline):
                 availability,
                 description
                 ) = (
+                EXCLUDED.year,
+                EXCLUDED.sem,
                 EXCLUDED.title,
                 EXCLUDED.credit,
                 EXCLUDED.remarks,
@@ -75,7 +82,9 @@ class NtuDetailsPipeline(ModifyPipeline):
                 EXCLUDED.description
                 );
                 ''',
-                (item.get('code'),
+                (item.get('year'),
+                 item.get('sem'),
+                 item.get('code'),
                  item.get('title'),
                  item.get('credit'),
                  item.get('gradeType'),
@@ -100,19 +109,20 @@ class NtuTimetablesPipeline(ModifyPipeline):
 
     def process_item(self, item, spider):
         """Save modules in the database.
-
         This method is called for every item pipeline component.
-
         """
         try:
             self.cursor.execute(
                 '''
-                UPDATE ntu
+                UPDATE ntu_modules
                 SET  remarks = CONCAT(%s, remarks)
-                WHERE code = %s
+                WHERE code = %s AND year = %s AND sem = %s
                 ''',
-                (item.get('remark'), item.get('code'))
+                (item.get('remark'), item.get('code'),
+                    item.get('year'), item.get('sem'))
             )
+            for lesson in item.get('timetable'):
+                print lesson
             self.connection.commit()
         except psycopg2.DatabaseError, e:
             print "Error: %s" % e

@@ -7,6 +7,8 @@ import re
 
 class NtuDetails(scrapy.Item):
     code = scrapy.Field()
+    year = scrapy.Field()
+    sem = scrapy.Field()
     title = scrapy.Field()
     credit = scrapy.Field()
     gradeType = scrapy.Field()
@@ -29,6 +31,8 @@ class NtuLesson(scrapy.Item):
 
 class NtuTimetables(scrapy.Item):
     code = scrapy.Field()
+    year = scrapy.Field()
+    sem = scrapy.Field()
     remark = scrapy.Field()
     timetable = scrapy.Field()
 
@@ -62,7 +66,6 @@ class NtuDetailsLoader(ModifyLoader):
         filterWord('Prerequisite:'),
         # change(corequisite) to change (corequisite)
         lambda x: re.sub(r'(?<=\S)\(', ' (', x),
-        # replace OR with lower cased ones
         lambda x: x.replace(' OR', ' or ')
     )
     preclusion_in = MapCompose(filterWord('Mutually exclusive with: '))
@@ -97,4 +100,7 @@ def parseWeekText(text):
 
 
 class NtuLessonLoader(ModifyLoader):
+    lessonType_in = MapCompose(lambda x: x[:3])
     weekText_in = MapCompose(unicode.strip, parseWeekText)
+    startTime_in = MapCompose(lambda x: x[:2] + ":" + x[2:])
+    endTime_in = MapCompose(lambda x: x[:2] + ":" + x[2:])

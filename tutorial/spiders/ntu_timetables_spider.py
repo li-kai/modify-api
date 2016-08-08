@@ -6,9 +6,11 @@ from tutorial.items import (NtuTimetables, NtuTimetablesLoader,
 class NtuTimetablesSpider(scrapy.Spider):
     name = "ntu_timetables"
     allowed_domains = ["wish.wis.ntu.edu.sg"]
+    year = 2016
+    sem = 1
     start_urls = [
         "https://wish.wis.ntu.edu.sg/webexe/owa/AUS_SCHEDULE.main_display1?" +
-        "staff_access=false&acadsem=2016;1" +
+        "staff_access=false&acadsem=" + year + ";" + sem +
         "&r_subj_code=ACC" +
         "&boption=Search&r_search_type=F"
     ]
@@ -55,6 +57,8 @@ class NtuTimetablesSpider(scrapy.Spider):
         # credit and department
         # just need code and title to extract the smallprint
         firstRow = header[0].xpath('.//font/text()').extract()
+        loader.add_value('year', self.year)
+        loader.add_value('sem', self.sem)
         loader.add_value('code', firstRow[0])
         loader.add_value('remark', self.getSmallprint(firstRow[1]))
 
