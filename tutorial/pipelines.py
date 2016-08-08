@@ -96,7 +96,7 @@ class NtuDetailsPipeline(ModifyPipeline):
                  )
             )
             self.connection.commit()
-        except psycopg2.DatabaseError, e:
+        except Exception as e:
             print "Error: %s" % e
             self.connection.rollback()
             raise
@@ -116,7 +116,7 @@ class NtuTimetablesPipeline(ModifyPipeline):
                 '''
                 UPDATE modules
                 SET  remarks = CONCAT(%s, remarks)
-                WHERE school = %s AND code = %s AND year = %s AND sem = %s
+                WHERE school = %s AND code = %s AND year = %s AND sem = %s;
                 ''',
                 (item.get('remark'), self.school, item.get('code'),
                     item.get('year'), item.get('sem'))
@@ -125,48 +125,52 @@ class NtuTimetablesPipeline(ModifyPipeline):
             self.cursor.execute(
                 '''
                 DELETE FROM lessons
-                WHERE school = %s AND year = %s AND sem = %s;
+                WHERE school = %s AND code = %s AND year = %s AND sem = %s;
                 ''',
-                (self.school, item.get('year'), item.get('sem'))
+                (self.school, item.get('code'),
+                    item.get('year'), item.get('sem'))
             )
 
-            for lesson in item.get('timetable'):
-                self.cursor.execute(
-                    '''
-                    INSERT INTO lessons (
-                    school,
-                    year,
-                    sem,
-                    code,
-                    class_no,
-                    day_text,
-                    lesson_type,
-                    week_text,
-                    start_time,
-                    end_time,
-                    venue
-                    ) values (
-                    %s, %s, %s,
-                    %s, %s, %s,
-                    %s, %s, %s,
-                    %s, %s
-                    );
-                    ''',
-                    (self.school,
-                     item.get('year'),
-                     item.get('sem'),
-                     item.get('code'),
-                     lesson['classNo'],
-                     lesson['dayText'],
-                     lesson['lessonType'],
-                     lesson['weekText'],
-                     lesson['startTime'],
-                     lesson['endTime'],
-                     lesson['venue']
-                     )
-                )
+            timetable = item.get('timetable')
+
+            if timetable is not None:
+                for lesson in timetable:
+                    self.cursor.execute(
+                        '''
+                        INSERT INTO lessons (
+                        school,
+                        year,
+                        sem,
+                        code,
+                        class_no,
+                        day_text,
+                        lesson_type,
+                        week_text,
+                        start_time,
+                        end_time,
+                        venue
+                        ) values (
+                        %s, %s, %s,
+                        %s, %s, %s,
+                        %s, %s, %s,
+                        %s, %s
+                        );
+                        ''',
+                        (self.school,
+                         item.get('year'),
+                         item.get('sem'),
+                         item.get('code'),
+                         lesson['classNo'],
+                         lesson['dayText'],
+                         lesson['lessonType'],
+                         lesson['weekText'],
+                         lesson['startTime'],
+                         lesson['endTime'],
+                         lesson['venue']
+                         )
+                    )
             self.connection.commit()
-        except psycopg2.DatabaseError, e:
+        except Exception as e:
             print "Error: %s" % e
             self.connection.rollback()
             raise

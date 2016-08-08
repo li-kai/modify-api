@@ -11,7 +11,7 @@ class NtuTimetablesSpider(scrapy.Spider):
     start_urls = [
         "https://wish.wis.ntu.edu.sg/webexe/owa/AUS_SCHEDULE.main_display1?"
         "staff_access=false&acadsem=%(year)s;%(sem)s"
-        "&r_subj_code=ACC"
+        "&r_subj_code=ES"
         "&boption=Search&r_search_type=F"
         % {'year': year, "sem": sem}
     ]
@@ -22,7 +22,7 @@ class NtuTimetablesSpider(scrapy.Spider):
     }
 
     def getText(self, selector):
-        text = selector.xpath('./text()').extract()
+        text = selector.xpath('./b/text()').extract()
         if len(text) == 0:
             return u''
         return text[0]
@@ -95,19 +95,28 @@ class NtuTimetablesSpider(scrapy.Spider):
         # potentially every pair is a module
         i = 0
         while i < len(hugeListUnprocessed):
-            moduleHeader = hugeListUnprocessed[i]
-            if (i + 1 < len(hugeListUnprocessed) and
-                    'border' in hugeListUnprocessed[i + 1].extract()):
-                moduleTimetable = hugeListUnprocessed[i + 1]
+            moduleHeader = hugeListUnprocessed[i].xpath('.//tr')
+            if i + 1 < len(hugeListUnprocessed):
 
-                modulesListUnprocessed.append([
-                    moduleHeader.xpath('.//tr'),
-                    moduleTimetable.xpath('.//tr')
-                ])
-                i += 2
+                moduleTimetable = hugeListUnprocessed[i + 1]
+                rows = moduleTimetable.xpath('.//tr')
+                if ('border' in moduleTimetable.extract() and
+                        len(rows) > 1):
+                    modulesListUnprocessed.append([
+                        moduleHeader,
+                        rows
+                    ])
+                    i += 2
+                # rare case, only headers, no lessons
+                elif len(rows) == 1:
+                    i += 2
+                # rare case, no timetable
+                else:
+                    modulesListUnprocessed.append([moduleHeader])
+                    i += 1
             # rare case, no timetable
             else:
-                modulesListUnprocessed.append([moduleHeader.xpath('.//tr')])
+                modulesListUnprocessed.append([moduleHeader])
                 i += 1
 
         for mod in modulesListUnprocessed:
@@ -120,15 +129,23 @@ class NtuTimetablesSpider(scrapy.Spider):
             # with classNo, dayText, lessonType, start&endTime being the
             # transitive properties
             timetable = mod[1]
-            lessonUidSet = set()
-            # first row are headers
-            for i in xrange(1, len(timetable)):
-                row = timetable[i].xpath('.//td/b')
-                # construct an uid, leaving out the group & index
-                uid = self.getUid(row)
-                if uid not in lessonUidSet:
-                    lessonUidSet.add(uid)
-                    loader.add_value(
-                        'timetable', self.parseLesson(row, timetable))
+
+            # sometimes the timetable is just a placeholder for remarks
+            if u'\xa0' in timetable[1].xpath('.//td/text()').extract():
+                for i in xrange(1, len(timetable)):
+                    row = timetable[i].xpath('.//td')
+                    loader.add_value('remark', self.getText(row[-1]))
+            # mostly not
+            else:
+                lessonUidSet = set()
+                # first row are headers
+                for i in xrange(1, len(timetable)):
+                    row = timetable[i].xpath('.//td')
+                    # construct an uid, leaving out the group & index
+                    uid = self.getUid(row)
+                    if uid not in lessonUidSet:
+                        lessonUidSet.add(uid)
+                        loader.add_value(
+                            'timetable', self.parseLesson(row, timetable))
 
             yield loader.load_item()
