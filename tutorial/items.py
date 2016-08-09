@@ -18,6 +18,7 @@ class NtuDetails(scrapy.Item):
     preclusion = scrapy.Field()
     availability = scrapy.Field()
     description = scrapy.Field()
+    exam = scrapy.Field()
 
 
 class NtuLesson(scrapy.Item):
@@ -37,7 +38,7 @@ class NtuTimetables(scrapy.Item):
     remark = scrapy.Field()
     timetable = scrapy.Field()
     
-    
+
     def __repr__(self):
         """only print out attr1 after exiting the Pipeline"""
         return repr({"code": self['code']})

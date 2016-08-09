@@ -11,7 +11,7 @@ class NtuTimetablesSpider(scrapy.Spider):
     start_urls = [
         "https://wish.wis.ntu.edu.sg/webexe/owa/AUS_SCHEDULE.main_display1?"
         "staff_access=false&acadsem=%(year)s;%(sem)s"
-        "&r_subj_code=ES"
+        "&r_subj_code="
         "&boption=Search&r_search_type=F"
         % {'year': year, "sem": sem}
     ]
