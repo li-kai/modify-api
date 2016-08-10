@@ -1,92 +1,73 @@
 import scrapy
+from utils import *
 from titlecase import titlecase
 from scrapy.loader import ItemLoader
 from scrapy.loader.processors import (Identity, Compose,
                                       MapCompose, Join, TakeFirst)
-import re
 
 
-class NtuDetails(scrapy.Item):
+class Details(scrapy.Item):
+    """General details item for both unis."""
     code = scrapy.Field()
     year = scrapy.Field()
     sem = scrapy.Field()
     title = scrapy.Field()
     credit = scrapy.Field()
-    gradeType = scrapy.Field()
     department = scrapy.Field()
+    remarks = scrapy.Field()
     prerequisite = scrapy.Field()
+    corequisite = scrapy.Field()
     preclusion = scrapy.Field()
     availability = scrapy.Field()
     description = scrapy.Field()
-    exam = scrapy.Field()
+    exam_start = scrapy.Field()
+    exam_end = scrapy.Field()
+    exam_venue = scrapy.Field()
 
 
-class NtuLesson(scrapy.Item):
-    classNo = scrapy.Field()
-    dayText = scrapy.Field()
-    lessonType = scrapy.Field()
-    weekText = scrapy.Field()
-    startTime = scrapy.Field()
-    endTime = scrapy.Field()
+class Lesson(scrapy.Item):
+    """General lesson item for both unis."""
+    class_no = scrapy.Field()
+    day_text = scrapy.Field()
+    lesson_type = scrapy.Field()
+    week_text = scrapy.Field()
+    start_time = scrapy.Field()
+    end_time = scrapy.Field()
     venue = scrapy.Field()
 
 
+class NusModule(Details):
+    """
+    Item containing all the information
+    for a single module for NUS, because
+    everything is contained nicely thanks
+    to NUSMODS.
+    """
+    timetable = scrapy.Field()
+
+
 class NtuTimetables(scrapy.Item):
+    """
+    Item containing all the lessons for a
+    single module for NTU. Does not contain
+    details for the module.
+    """
     code = scrapy.Field()
     year = scrapy.Field()
     sem = scrapy.Field()
     remark = scrapy.Field()
     timetable = scrapy.Field()
-    
-
+    '''
     def __repr__(self):
         """only print out attr1 after exiting the Pipeline"""
         return repr({"code": self['code']})
-
-
-def fixHumanWritenText(word):
-    # 'change(corequisite)' to 'change (corequisite)'
-    word = re.sub(r'(?<=\S)\(', ' (', word)
-    word = word.replace(' OR', ' or ')
-    # replace tabs with space
-    word = word.replace('\t', ' ')
-    # turns multiple whitespace to a single space
-    word = re.sub('\s +', ' ', word)
-    # add space before . , ; chars as needed
-    word = re.sub(r'([\.|;|,])(?=\w)', r'\1 ', word)
-    # minor fix
-    word = word.replace('i. e. ', 'i.e. ')
-    # turns 'man?s to man's and students? to students'
-    word = re.sub(r'\?(?=[sS])|(?<=[sS])\?', '\'', word)
-    # turns 'for example ? the' to 'for example - the'
-    word = re.sub(r' \? ', ' - ', word)
-    word = preventAllCaps(word)
-    return word
-
-
-def filterWord(rule):
-    return lambda x: None if x == rule else x
-
-
-def upperRoman(word):
-    if word in {'Ii', 'Iia', 'Iib', 'Iii', 'Iv', 'Vi', 'Vii', 'Viii', 'Ix'}:
-        word = word.upper()
-    return word
-
-
-def concatenateAvail(word):
-    if 'Not available' in word:
-        return u'\n' + word
-    return word
-
-
-def preventAllCaps(sentence):
-    if sentence.isupper() and len(sentence) > 6 and '.' in sentence:
-        return unicode.capitalize(sentence)
-    return sentence
+    '''
 
 
 class ModifyLoader(ItemLoader):
+    """
+    Generalized loader for all loaders below
+    """
     default_input_processor = MapCompose(unicode.strip)
     default_output_processor = Join('')
     year_in = Identity()
@@ -96,6 +77,10 @@ class ModifyLoader(ItemLoader):
 
 
 class NtuDetailsLoader(ModifyLoader):
+    """
+    Parses all the details to the required form for
+    input into database.
+    """
     joinThenStripWhitespace = Compose(lambda x: ''.join(x), unicode.strip)
     title_in = MapCompose(
         unicode.strip,
@@ -105,11 +90,11 @@ class NtuDetailsLoader(ModifyLoader):
         lambda x: ' '.join([upperRoman(word) for word in x.split(' ')])
     )
 
-    gradeType_in = MapCompose(filterWord('Grade Type: '))
+    grade_type_in = MapCompose(filterWord('Grade Type: '))
 
     prerequisite_in = MapCompose(
         lambda x: u'\n' if x == 'Prerequisite:' else x,
-        fixHumanWritenText
+        fixHumanWrittenText
     )
     prerequisite_out = joinThenStripWhitespace
 
@@ -120,10 +105,36 @@ class NtuDetailsLoader(ModifyLoader):
         preventAllCaps
     )
     availability_out = joinThenStripWhitespace
-    description_in = MapCompose(
-        fixHumanWritenText
-    )
+    description_in = MapCompose(fixHumanWrittenText)
     description_out = joinThenStripWhitespace
+
+
+class NusDetailsLoader(ModifyLoader):
+    """
+    Most details are nicely filed out thanks to NUSMODS, however
+    some fields differ in format needed.
+    """
+
+    joinThenStripWhitespace = Compose(lambda x: ''.join(x), unicode.strip)
+    title_in = MapCompose(
+        unicode.strip,
+        # proper titlecase
+        titlecase,
+        # turns roman chars to UPPER casing
+        lambda x: ' '.join([upperRoman(word) for word in x.split(' ')])
+    )
+
+    department_in = MapCompose(titlecase, unicode.strip)
+
+    description_in = MapCompose(fixHumanWrittenText)
+    description_out = joinThenStripWhitespace
+
+    exam_duration_in = MapCompose(lambda x: )
+
+
+class NusLoader(ModifyLoader):
+    timetable_in = MapCompose()
+    timetable_out = Identity()
 
 
 class NtuTimetablesLoader(ModifyLoader):
@@ -131,18 +142,9 @@ class NtuTimetablesLoader(ModifyLoader):
     timetable_out = Identity()
 
 
-def parseWeekText(text):
-    if text == u'':
-        return u'Every week'
-    elif '-' in text or ',' in text:
-        return text.replace('Wk', 'Weeks ')\
-            .replace(',', ', ')
-    else:
-        return text.replace('Wk', 'Week ')
-
-
-class NtuLessonLoader(ModifyLoader):
-    lessonType_in = MapCompose(lambda x: x[:3])
-    weekText_in = MapCompose(unicode.strip, parseWeekText)
-    startTime_in = MapCompose(lambda x: x[:2] + ":" + x[2:])
-    endTime_in = MapCompose(lambda x: x[:2] + ":" + x[2:])
+class LessonLoader(ModifyLoader):
+    lesson_type_in = MapCompose(lambda x: x[:3], unicode.upper)
+    day_text_in = MapCompose(lambda x: x[:3], unicode.upper)
+    week_text_in = MapCompose(unicode.strip, parseWeekText)
+    start_time_in = MapCompose(lambda x: x[:2] + ":" + x[2:])
+    end_time_in = MapCompose(lambda x: x[:2] + ":" + x[2:])

@@ -1,5 +1,5 @@
 import scrapy
-from tutorial.items import NtuDetails, NtuDetailsLoader
+from tutorial.items import Details, NtuDetailsLoader
 
 
 class NtuDetailsSpider(scrapy.Spider):
@@ -34,7 +34,7 @@ class NtuDetailsSpider(scrapy.Spider):
 
         for mod in modulesListUnprocessed:
             # each mod is a module
-            loader = NtuDetailsLoader(NtuDetails(), mod)
+            loader = NtuDetailsLoader(Details(), mod)
             # first row contains code, title
             # credit and department
             firstRow = mod[0].xpath('.//font/text()').extract()
@@ -46,7 +46,7 @@ class NtuDetailsSpider(scrapy.Spider):
             loader.add_value('department', firstRow[3])
 
             # second row onwards contains prerequisites,
-            # gradeType, preclusion and availability
+            # remarks, preclusion and availability
             # which can take up several rows
             for i in xrange(1, len(mod)):
                 row = mod[i].xpath('.//font')
@@ -59,7 +59,7 @@ class NtuDetailsSpider(scrapy.Spider):
                     if ('color="#FF00FF"' in data):
                         loader.add_value('prerequisite', requirement)
                     elif ('color="RED"' in data):
-                        loader.add_value('gradeType', requirement)
+                        loader.add_value('remarks', requirement)
                     elif ('color="BROWN"' in data):
                         loader.add_value('preclusion', requirement)
                     elif ('color="GREEN"' in data):

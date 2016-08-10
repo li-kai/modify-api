@@ -1,6 +1,6 @@
 import scrapy
 from tutorial.items import (NtuTimetables, NtuTimetablesLoader,
-                            NtuLesson, NtuLessonLoader)
+                            Lesson, LessonLoader)
 
 
 class NtuTimetablesSpider(scrapy.Spider):
@@ -67,24 +67,24 @@ class NtuTimetablesSpider(scrapy.Spider):
         # or module level remarks
         # since we parse prerequisites in NtuDetails, we shall ignore those
         for i in xrange(1, len(header)):
-            row = header[i].xpath('//font/text()').extract()
+            row = header[i].xpath('.//font/text()').extract()
             if 'Remark:' in row:
                 loader.add_value('remark', row[1:])
 
     def parseLesson(self, row, timetable):
-        lessonLoader = NtuLessonLoader(NtuLesson(), timetable)
+        lessonLoader = LessonLoader(Lesson(), timetable)
         row[1] = self.getText(row[1])
         row[2] = self.getText(row[2])
         if len(row[2]) == 1:
             row[2] = row[1][0] + row[2]
-        lessonLoader.add_value('lessonType', row[1])
-        lessonLoader.add_value('classNo', row[2])
-        lessonLoader.add_value('dayText', self.getText(row[3]))
+        lessonLoader.add_value('lesson_type', row[1])
+        lessonLoader.add_value('class_no', row[2])
+        lessonLoader.add_value('day_text', self.getText(row[3]))
         timing = self.getText(row[4]).split('-')
-        lessonLoader.add_value('startTime', timing[0])
-        lessonLoader.add_value('endTime', timing[1])
+        lessonLoader.add_value('start_time', timing[0])
+        lessonLoader.add_value('end_time', timing[1])
         lessonLoader.add_value('venue', self.getText(row[5]))
-        lessonLoader.add_value('weekText', self.getText(row[6]))
+        lessonLoader.add_value('week_text', self.getText(row[6]))
         return lessonLoader.load_item()
 
     def parse(self, response):

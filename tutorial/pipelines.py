@@ -30,6 +30,144 @@ class ModifyPipeline(object):
             raise e
 
 
+class NusDetailsPipeline(ModifyPipeline):
+    school = 'NUS'
+
+    def process_item(self, item, spider):
+        """Save modules in the database.
+        This method is called for every item pipeline component.
+        """
+        try:
+            self.cursor.execute(
+                '''
+                INSERT INTO modules (
+                school,
+                year,
+                sem,
+                code,
+                title,
+                credit,
+                remarks,
+                department,
+                prerequisite,
+                corequisite,
+                preclusion,
+                availability,
+                description,
+                exam_time,
+                exam_venue,
+                exam_duration
+                ) values (
+                %s, %s, %s,
+                %s, %s, %s,
+                %s, %s, %s,
+                %s, %s, %s,
+                %s, %s, %s,
+                %s
+                ) ON CONFLICT (school, year, sem, code) DO UPDATE SET (
+                title,
+                credit,
+                remarks,
+                department,
+                prerequisite,
+                corequisite,
+                preclusion,
+                availability,
+                description,
+                exam_time,
+                exam_venue,
+                exam_duration
+                ) = (
+                EXCLUDED.title,
+                EXCLUDED.credit,
+                EXCLUDED.remarks,
+                EXCLUDED.department,
+                EXCLUDED.prerequisite,
+                EXCLUDED.corequisite,
+                EXCLUDED.preclusion,
+                EXCLUDED.availability,
+                EXCLUDED.description,
+                EXCLUDED.exam_time,
+                EXCLUDED.exam_venue,
+                EXCLUDED.exam_duration
+                );
+                ''',
+                (self.school,
+                 item.get('year'),
+                 item.get('sem'),
+                 item.get('code'),
+                 item.get('title'),
+                 item.get('credit'),
+                 item.get('remarks'),
+                 item.get('department'),
+                 item.get('prerequisite'),
+                 item.get('corequisite'),
+                 item.get('preclusion'),
+                 item.get('availability'),
+                 item.get('description'),
+                 item.get('exam_time'),
+                 item.get('exam_venue'),
+                 item.get('exam_duration')
+                 )
+            )
+
+            self.cursor.execute(
+                '''
+                DELETE FROM lessons
+                WHERE lessons.modules_id = (
+                SELECT id from modules
+                WHERE school = %s AND code = %s AND year = %s AND sem = %s);
+                ''',
+                (self.school, item.get('code'),
+                    item.get('year'), item.get('sem'))
+            )
+
+            timetable = item.get('timetable')
+
+            if timetable is not None:
+                for lesson in timetable:
+                    self.cursor.execute(
+                        '''
+                        INSERT INTO lessons (
+                        modules_id,
+                        class_no,
+                        day_text,
+                        lesson_type,
+                        week_text,
+                        start_time,
+                        end_time,
+                        venue
+                        ) values (
+                        (SELECT id from modules
+                        WHERE school = %s AND year = %s
+                        AND sem = %s AND code = %s),
+                        %s, %s, %s,
+                        %s, %s, %s,
+                        %s
+                        );
+                        ''',
+                        (self.school,
+                         item.get('year'),
+                         item.get('sem'),
+                         item.get('code'),
+                         lesson['class_no'],
+                         lesson['day_text'],
+                         lesson['lesson_type'],
+                         lesson['week_text'],
+                         lesson['start_time'],
+                         lesson['end_time'],
+                         lesson['venue']
+                         )
+                    )
+            self.connection.commit()
+        except Exception as e:
+            print "Error: %s" % e
+            self.connection.rollback()
+            raise
+
+        return item
+
+
 class NtuDetailsPipeline(ModifyPipeline):
     """NtuDetailsPipeline pipeline for storing scraped items in the database"""
     school = 'NTU'
@@ -87,7 +225,7 @@ class NtuDetailsPipeline(ModifyPipeline):
                  item.get('code'),
                  item.get('title'),
                  item.get('credit'),
-                 item.get('gradeType'),
+                 item.get('remarks'),
                  item.get('department'),
                  item.get('prerequisite'),
                  item.get('preclusion'),
@@ -125,7 +263,9 @@ class NtuTimetablesPipeline(ModifyPipeline):
             self.cursor.execute(
                 '''
                 DELETE FROM lessons
-                WHERE school = %s AND code = %s AND year = %s AND sem = %s;
+                WHERE lessons.modules_id = (
+                SELECT id from modules
+                WHERE school = %s AND code = %s AND year = %s AND sem = %s);
                 ''',
                 (self.school, item.get('code'),
                     item.get('year'), item.get('sem'))
@@ -138,10 +278,7 @@ class NtuTimetablesPipeline(ModifyPipeline):
                     self.cursor.execute(
                         '''
                         INSERT INTO lessons (
-                        school,
-                        year,
-                        sem,
-                        code,
+                        modules_id,
                         class_no,
                         day_text,
                         lesson_type,
@@ -150,22 +287,24 @@ class NtuTimetablesPipeline(ModifyPipeline):
                         end_time,
                         venue
                         ) values (
+                        (SELECT id from modules
+                        WHERE school = %s AND year = %s
+                        AND sem = %s AND code = %s),
                         %s, %s, %s,
                         %s, %s, %s,
-                        %s, %s, %s,
-                        %s, %s
+                        %s
                         );
                         ''',
                         (self.school,
                          item.get('year'),
                          item.get('sem'),
                          item.get('code'),
-                         lesson['classNo'],
-                         lesson['dayText'],
-                         lesson['lessonType'],
-                         lesson['weekText'],
-                         lesson['startTime'],
-                         lesson['endTime'],
+                         lesson['class_no'],
+                         lesson['day_text'],
+                         lesson['lesson_type'],
+                         lesson['week_text'],
+                         lesson['start_time'],
+                         lesson['end_time'],
                          lesson['venue']
                          )
                     )
