@@ -106,6 +106,7 @@ class NtuDetailsLoader(ModifyLoader):
     availability_out = joinThenStripWhitespace
     description_in = MapCompose(fixHumanWrittenText)
     description_out = joinThenStripWhitespace
+    remarks_in = MapCompose(lambda x: x + u'\n')
 
 
 class NusLoader(ModifyLoader):
@@ -139,6 +140,9 @@ class NusLoader(ModifyLoader):
 class NtuTimetablesLoader(ModifyLoader):
     timetable_in = MapCompose()
     timetable_out = Identity()
+
+    remark_in = MapCompose(lambda x: x + u'\n')
+    remark_out = Join('')
 
 
 class LessonLoader(ModifyLoader):
