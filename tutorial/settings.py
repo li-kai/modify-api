@@ -10,7 +10,7 @@ import user
 #     http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 
 BOT_NAME = 'tutorial'
-#LOG_LEVEL='INFO'
+LOG_LEVEL='INFO'
 SPIDER_MODULES = ['tutorial.spiders']
 
 # PostgresSQL db
