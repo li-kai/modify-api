@@ -16,13 +16,12 @@ class Details(scrapy.Item):
     department = scrapy.Field()
     remarks = scrapy.Field()
     prerequisite = scrapy.Field()
-    corequisite = scrapy.Field()
     preclusion = scrapy.Field()
     availability = scrapy.Field()
     description = scrapy.Field()
-    exam_start = scrapy.Field()
-    exam_end = scrapy.Field()
+    exam_time = scrapy.Field()
     exam_venue = scrapy.Field()
+    exam_duration = scrapy.Field()
 
 
 class Lesson(scrapy.Item):
@@ -109,7 +108,7 @@ class NtuDetailsLoader(ModifyLoader):
     description_out = joinThenStripWhitespace
 
 
-class NusDetailsLoader(ModifyLoader):
+class NusLoader(ModifyLoader):
     """
     Most details are nicely filed out thanks to NUSMODS, however
     some fields differ in format needed.
@@ -129,10 +128,10 @@ class NusDetailsLoader(ModifyLoader):
     description_in = MapCompose(fixHumanWrittenText)
     description_out = joinThenStripWhitespace
 
-    exam_duration_in = MapCompose(lambda x: )
+    remarks_in = MapCompose(lambda x: x + u'\n')
+    remarks_out = joinThenStripWhitespace
+    exam_duration_in = MapCompose(lambda x: x[0] + 'T' + x[1:])
 
-
-class NusLoader(ModifyLoader):
     timetable_in = MapCompose()
     timetable_out = Identity()
 
