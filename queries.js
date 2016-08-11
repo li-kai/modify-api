@@ -1,6 +1,6 @@
 const promise = require('bluebird');
 const path = require('path');
-const user = require('user');
+const user = require('./user');
 const expressValidator = require('express-validator');
 
 // Initialization Options for pg-promise

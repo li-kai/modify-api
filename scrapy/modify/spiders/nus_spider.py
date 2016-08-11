@@ -11,7 +11,7 @@ class NusDetailsSpider(scrapy.Spider):
     sem = 1
     start_urls = [
         "http://api.nusmods.com/%(year_one)s-%(year_two)s/%(sem)s/modules.json"
-        % {'year_one': year - 1, 'year_two': year, "sem": sem}
+        % {'year_one': year, 'year_two': year + 1, "sem": sem}
     ]
     custom_settings = {
         'ITEM_PIPELINES': {

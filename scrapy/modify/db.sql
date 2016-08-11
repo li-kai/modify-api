@@ -21,7 +21,7 @@ CREATE TABLE public.modules
   sem             SMALLINT NOT NULL CHECK (sem > 0 AND sem < 8),
   department      TEXT NOT NULL,
   code            TEXT NOT NULL,
-  credit          REAL NOT NULL CHECK (credit >= 0 AND credit < 40),
+  credit          REAL NOT NULL CHECK (credit >= 0 AND credit < 100),
   title           TEXT NOT NULL,
   description     TEXT NOT NULL,
   exam_time       TIMESTAMP WITH TIME ZONE,
