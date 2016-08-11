@@ -1,0 +1,2 @@
+username = 'scrapy'
+password = 'supermanbatmanwonderwoman'

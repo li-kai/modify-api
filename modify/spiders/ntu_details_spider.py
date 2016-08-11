@@ -1,5 +1,5 @@
 import scrapy
-from tutorial.items import Details, NtuDetailsLoader
+from modify.items import Details, NtuDetailsLoader
 
 
 class NtuDetailsSpider(scrapy.Spider):
@@ -15,7 +15,7 @@ class NtuDetailsSpider(scrapy.Spider):
     ]
     custom_settings = {
         'ITEM_PIPELINES': {
-            'tutorial.pipelines.NtuDetailsPipeline': 400
+            'modify.pipelines.NtuDetailsPipeline': 400
         }
     }
 

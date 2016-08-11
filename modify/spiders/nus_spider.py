@@ -1,6 +1,6 @@
 import scrapy
 import json
-from tutorial.items import (
+from modify.items import (
     NusModule, NusLoader, LessonLoader, Lesson)
 
 
@@ -15,7 +15,7 @@ class NusDetailsSpider(scrapy.Spider):
     ]
     custom_settings = {
         'ITEM_PIPELINES': {
-            'tutorial.pipelines.NusDetailsPipeline': 400
+            'modify.pipelines.NusDetailsPipeline': 400
         }
     }
 

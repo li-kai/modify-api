@@ -1,6 +1,6 @@
 import scrapy
-from tutorial.items import (NtuTimetables, NtuTimetablesLoader,
-                            Lesson, LessonLoader)
+from modify.items import (NtuTimetables, NtuTimetablesLoader,
+                          Lesson, LessonLoader)
 
 
 class NtuTimetablesSpider(scrapy.Spider):
@@ -17,7 +17,7 @@ class NtuTimetablesSpider(scrapy.Spider):
     ]
     custom_settings = {
         'ITEM_PIPELINES': {
-            'tutorial.pipelines.NtuTimetablesPipeline': 400
+            'modify.pipelines.NtuTimetablesPipeline': 400
         }
     }
 
