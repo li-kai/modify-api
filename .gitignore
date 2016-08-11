@@ -1,3 +1,5 @@
 *.pyc
 scrapy/.scrapy
 scrapy/modify/user.py
+user.js
+node_modules
