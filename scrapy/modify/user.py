@@ -1,2 +1,0 @@
-username = 'scrapy'
-password = 'supermanbatmanwonderwoman'
