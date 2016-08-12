@@ -83,12 +83,7 @@ function getSingleModule(req, res, next) {
 
   db.one(sqlFindModule, {school, year, sem, code})
     .then(function (data) {
-      res.status(200)
-        .json({
-          status: 'success',
-          data: data,
-          message: 'Retrieved single module'
-        });
+      res.status(200).json(data);
     })
     .catch(function (error) {
       // output no data as 404 instead of 500
@@ -115,12 +110,7 @@ function getModulesList(req, res, next) {
 
   db.any(sqlModuleList, {school, year, sem})
     .then(function (data) {
-      res.status(200)
-        .json({
-          status: 'success',
-          data: data,
-          message: 'Retrieved all modules'
-        });
+      res.status(200).json(data);
     })
     .catch(function (error) {
       return next(error);
