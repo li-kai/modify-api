@@ -1,4 +1,5 @@
 *.pyc
+scrapy/env
 scrapy/.scrapy
 scrapy/modify/user.py
 user.js
