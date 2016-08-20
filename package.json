@@ -6,13 +6,17 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
-    "bluebird": "^3.3.4",
+    "bluebird": "^3.4.1",
     "body-parser": "~1.15.2",
     "cookie-parser": "~1.4.3",
     "debug": "~2.2.0",
     "express": "~4.14.0",
     "express-validator": "^2.20.8",
     "morgan": "~1.7.0",
-    "pg-promise": "^5.2.7"
+    "passport": "^0.3.2",
+    "passport-facebook": "^2.1.1",
+    "passport-google-oauth": "^1.0.0",
+    "passport-local": "^1.0.0",
+    "pg-promise": "^5.3.2"
   }
 }
