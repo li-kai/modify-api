@@ -10,11 +10,11 @@ const options = {
 
 // Connection Params for pg-promise
 const connectionParams = {
-    host: 'localhost',
-    port: 5432,
-    database: 'modify',
-    user: user.username,
-    password: user.password
+  host: 'localhost',
+  port: 5432,
+  database: 'modify',
+  user: user.username,
+  password: user.password
 };
 
 const pgp = require('pg-promise')(options);
