@@ -8,7 +8,7 @@ RESTful API for Modify.sg
 ### Usage
 #### GET modulesList/&lt;School&gt;/&lt;AcadYear&gt;/&lt;Semester&gt;/
 
-http://api.modify.com/modulesList/nus/2016/1/
+https://api.modify.sg/modulesList/nus/2016/1/
 
 ```
 {
@@ -21,7 +21,7 @@ http://api.modify.com/modulesList/nus/2016/1/
 
 #### GET modules/&lt;School&gt;/&lt;AcadYear&gt;/&lt;Semester&gt;/&lt;ModuleCode&gt;
 
-http://api.modify.com/modulesList/ntu/2016/1/AB1001
+https://api.modify.sg/modules/ntu/2016/1/AB0001
 
 ```
 {
