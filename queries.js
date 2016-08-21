@@ -1,6 +1,6 @@
 const promise = require('bluebird');
 const path = require('path');
-const user = require('./user');
+const config = require('./config');
 const expressValidator = require('express-validator');
 
 // Initialization Options for pg-promise
@@ -13,8 +13,8 @@ const connectionParams = {
   host: 'localhost',
   port: 5432,
   database: 'modify',
-  user: user.username,
-  password: user.password
+  user: config.postgreStore.username,
+  password: config.postgreStore.password,
 };
 
 const pgp = require('pg-promise')(options);
@@ -82,10 +82,10 @@ function getSingleModule(req, res, next) {
   const code = req.params.code.toUpperCase();
 
   db.one(sqlFindModule, {school, year, sem, code})
-    .then(function (data) {
+    .then((data) => {
       res.status(200).json(data);
     })
-    .catch(function (error) {
+    .catch((error) => {
       // output no data as 404 instead of 500
       if (error.result &&
         'rowCount' in error.result &&
@@ -109,13 +109,15 @@ function getModulesList(req, res, next) {
   const sem = parseInt(req.params.sem, 10);
 
   db.any(sqlModuleList, {school, year, sem})
-    .then(function (data) {
+    .then((data) => {
       res.status(200).json(data);
     })
-    .catch(function (error) {
+    .catch((error) => {
       return next(error);
     });
 }
+
+
 
 
 module.exports = {
