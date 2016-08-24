@@ -2,5 +2,5 @@
 scrapy/env
 scrapy/.scrapy
 scrapy/modify/user.py
-user.js
+config.js
 node_modules

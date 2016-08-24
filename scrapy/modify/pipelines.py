@@ -1,6 +1,10 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import psycopg2
 from settings import DATABASE
+import psycopg2
+import psycopg2.extensions
+psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
+psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
 

@@ -1,6 +1,6 @@
 const promise = require('bluebird');
 const path = require('path');
-const user = require('./user');
+const config = require('./config');
 const expressValidator = require('express-validator');
 
 // Initialization Options for pg-promise
@@ -13,8 +13,8 @@ const connectionParams = {
     host: 'localhost',
     port: 5432,
     database: 'modify',
-    user: user.username,
-    password: user.password
+    user: config.postgreStore.username,
+    password: config.postgreStore.password,
 };
 
 const pgp = require('pg-promise')(options);
@@ -29,6 +29,8 @@ function sql(file) {
 // Create QueryFile globally, once per file: 
 const sqlFindModule = sql('./sql/module.sql');
 const sqlModuleList = sql('./sql/module_list.sql');
+const sqlFindUserById = sql('./sql/find_local_by_id.sql');
+const sqlFindUserByEmail = sql('./sql/find_local_by_email.sql');
 
 // Schema for common fields
 const checkSchema = {
@@ -117,8 +119,17 @@ function getModulesList(req, res, next) {
     });
 }
 
+function getSingleUserById(id) {
+  return db.one(sqlFindUserById, {id});
+}
+
+function getSingleUserByEmail(email) {
+  return db.oneOrNone(sqlFindUserByEmail, {email});
+}
 
 module.exports = {
   getSingleModule,
-  getModulesList
+  getModulesList,
+  getSingleUserById,
+  getSingleUserByEmail,
 };

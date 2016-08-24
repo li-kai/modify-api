@@ -131,7 +131,7 @@ class NusLoader(ModifyLoader):
 
     remarks_in = MapCompose(lambda x: x + u'\n')
     remarks_out = joinThenStripWhitespace
-    exam_duration_in = MapCompose(lambda x: x[0] + 'T' + x[1:])
+    exam_duration_in = MapCompose(lambda x: x[0] + u'T' + x[1:])
 
     timetable_in = MapCompose()
     timetable_out = Identity()
