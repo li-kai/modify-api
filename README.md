@@ -8,7 +8,7 @@ RESTful API for Modify.sg
 ### Usage
 #### GET modulesList/&lt;School&gt;/&lt;AcadYear&gt;/&lt;Semester&gt;/
 
-http://api.modify.com/modulesList/nus/2016/1/
+http://api.modify.sg/modulesList/nus/2016/1/
 
 ```
 {
@@ -21,15 +21,15 @@ http://api.modify.com/modulesList/nus/2016/1/
 
 #### GET modules/&lt;School&gt;/&lt;AcadYear&gt;/&lt;Semester&gt;/&lt;ModuleCode&gt;
 
-http://api.modify.com/modulesList/ntu/2016/1/AB1001
+https://api.modify.sg/modulesList/ntu/2016/1/AAA18C
 
 ```
 {
-    "code": "AB0001",
-    "department": "ACC",
+    "code": "AAA18C",
+    "department": "NIE",
     "credit": 3,
-    "title": "Sustainability: Issues, Reporting & Finance",
-    "description": "This course explores theoretical frameworks ...",
+    "title": "Introduction to Contemporary Sculpture Practice",
+    "description": "A study of the skills and knowledge ...",
     "exam_time": null,
     "exam_venue": null,
     "exam_duration": null,
@@ -74,6 +74,7 @@ scrapy crawl nus_details
 # for ntu (note the order)
 scrapy crawl ntu_details
 scrapy crawl ntu_timetables
+python exams.py
 ```
 
 ### Running your own server
