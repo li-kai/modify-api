@@ -31,6 +31,7 @@ const sqlFindModule = sql('./sql/module.sql');
 const sqlModuleList = sql('./sql/module_list.sql');
 const sqlFindUserById = sql('./sql/find_local_by_id.sql');
 const sqlFindUserByEmail = sql('./sql/find_local_by_email.sql');
+const sqlInsertUser = sql('./sql/insert_local_user.sql');
 
 // Schema for common fields
 const checkSchema = {
@@ -120,11 +121,15 @@ function getModulesList(req, res, next) {
 }
 
 function getSingleUserById(id) {
-  return db.one(sqlFindUserById, {id});
+  return db.one(sqlFindUserById, { id });
 }
 
 function getSingleUserByEmail(email) {
-  return db.oneOrNone(sqlFindUserByEmail, {email});
+  return db.oneOrNone(sqlFindUserByEmail, { email });
+}
+
+function setSingleUser(email, password) {
+  return db.one(sqlInsertUser, { email, password });
 }
 
 module.exports = {
@@ -132,4 +137,5 @@ module.exports = {
   getModulesList,
   getSingleUserById,
   getSingleUserByEmail,
+  setSingleUser,
 };

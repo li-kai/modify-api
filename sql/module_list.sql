@@ -1,3 +1,3 @@
-select code, title
-from modules
-where school = ${school} AND year = ${year} AND sem = ${sem};
+SELECT code, title
+FROM modules
+WHERE school = ${school} AND year = ${year} AND sem = ${sem};

@@ -2,6 +2,7 @@
         
 // load all the things we need
 const db = require('../queries');
+const bcrypt = require('bcrypt');
 const LocalStrategy = require('passport-local').Strategy;
 
 // expose this function to our app using module.exports
@@ -14,15 +15,19 @@ module.exports = function(passport) {
   // passport needs ability to serialize and unserialize users out of session
 
   // used to serialize the user for the session
-  passport.serializeUser(function(user, done) {
+  passport.serializeUser((user, done) => {
     done(null, user.id);
   });
 
   // used to deserialize the user
-  passport.deserializeUser(function(id, done) {
-    db.getSingleUser(id, done);
+  passport.deserializeUser((id, done) => {
+    db.getSingleUserById(id).then((user) => {
+      done(null, user);
+    }).catch((error) => {
+      console.log(error);
+      done(error, null);
+    });
   });
-  
 
   // =========================================================================
   // LOCAL SIGNUP ============================================================
@@ -35,37 +40,44 @@ module.exports = function(passport) {
     usernameField : 'email',
     passwordField : 'password',
     passReqToCallback : true // allows us to pass back the entire request to the callback
-  },
-  function(req, email, password, done) {
-
+  }, registerUser));
+  
+  function registerUser(req, email, password, done) {
     // find a user whose email is the same as the forms email
     // we are checking to see if the user trying to login already exists
-    connection.query("select * from users where email = '"+email+"'",function(err,rows){
-      console.log(rows);
-      console.log("above row object");
-      if (err)
-        return done(err);
-       if (rows.length) {
+    db.getSingleUserByEmail(email).then((user) => {
+      // user exists // TODO: reroute them to log in if password is correct
+      if (user) {
         return done(null, false, req.flash('signupMessage', 'That email is already taken.'));
-      } else {
-
-        // if there is no user with that email
-        // create the user
-        var newUserMysql = new Object();
+      }
+      // if there is no user with that email
+      // create the user
+      bcrypt.hash(password, 10, (err, hash) => {
+        // Store hash in your password DB.
+        const newUser = {
+          email,
+          password: hash,
+        };
         
-        newUserMysql.email    = email;
-        newUserMysql.password = password; // use the generateHash function in our user model
-      
-        var insertQuery = "INSERT INTO users ( email, password ) values ('" + email +"','"+ password +"')";
-          console.log(insertQuery);
-        connection.query(insertQuery,function(err,rows){
-        newUserMysql.id = rows.insertId;
+        if (err) {
+          console.log(err);
+          return done(err, null);
+        }
         
-        return done(null, newUserMysql);
-        });	
-      }	
+        db.setSingleUser(email, hash).then((id) => {
+          newUser.id = id;
+          return done(null, newUser);
+        }).catch((error) => {
+          console.log(error);
+          return done(error, null);
+        });
+      });
+    }).catch((error) => {
+      if (error) {
+        return done(error);
+      }
     });
-  }));
+  }
 
   // =========================================================================
   // LOCAL LOGIN =============================================================
