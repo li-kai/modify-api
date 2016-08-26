@@ -6,7 +6,10 @@ const bodyParser = require('body-parser');
 const expressValidator = require('express-validator');
 const routes = require('./routes/index');
 const passport = require('passport');
+const flash    = require('connect-flash');
 const session = require('express-session');
+
+require('./auth/passport.js')(passport);
 
 const app = express();
 
@@ -20,13 +23,12 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(flash()); // use connect-flash for flash messages stored in session
 
 app.use(expressValidator());
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
-
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   const err = new Error('Not Found');

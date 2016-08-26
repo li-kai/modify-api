@@ -56,3 +56,14 @@ GRANT ALL ON TABLE public.lessons TO postgres;
 GRANT ALL ON TABLE public.lessons TO scrapy;
 
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public to scrapy;
+
+CREATE TABLE public.users
+(
+  id              SERIAL PRIMARY KEY,
+  email           TEXT NOT NULL,
+  password        TEXT NOT NULL
+);
+ALTER TABLE public.users
+  OWNER TO scrapy;
+GRANT ALL ON TABLE public.users TO postgres;
+GRANT ALL ON TABLE public.users TO scrapy;

@@ -1,7 +1,6 @@
 const promise = require('bluebird');
 const path = require('path');
 const config = require('./config');
-const expressValidator = require('express-validator');
 
 // Initialization Options for pg-promise
 const options = {
@@ -22,7 +21,7 @@ const db = pgp(connectionParams);
 
 // Helper for linking to external query files:  
 function sql(file) {
-    const fullPath = path.join(__dirname, file) 
+    const fullPath = path.join(__dirname, file);
     return new pgp.QueryFile(fullPath, {debug: true});
 }
 
@@ -32,6 +31,7 @@ const sqlModuleList = sql('./sql/module_list.sql');
 const sqlFindUserById = sql('./sql/find_local_by_id.sql');
 const sqlFindUserByEmail = sql('./sql/find_local_by_email.sql');
 const sqlInsertUser = sql('./sql/insert_local_user.sql');
+const sqlUsersList = sql('./sql/users_list.sql');
 
 // Schema for common fields
 const checkSchema = {
@@ -120,6 +120,16 @@ function getModulesList(req, res, next) {
     });
 }
 
+function getUsersList(req, res, next) {
+   db.any(sqlUsersList)
+    .then(function (data) {
+      res.status(200).json(data);
+    })
+    .catch(function (error) {
+      return next(error);
+    });
+}
+
 function getSingleUserById(id) {
   return db.one(sqlFindUserById, { id });
 }
@@ -138,4 +148,5 @@ module.exports = {
   getSingleUserById,
   getSingleUserByEmail,
   setSingleUser,
+  getUsersList,
 };

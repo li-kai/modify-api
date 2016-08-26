@@ -43,11 +43,16 @@ module.exports = function(passport) {
   }, registerUser));
   
   function registerUser(req, email, password, done) {
+    // asynchronous
+    // User.findOne wont fire unless data is sent back
+    process.nextTick(() => {
+      
     // find a user whose email is the same as the forms email
     // we are checking to see if the user trying to login already exists
     db.getSingleUserByEmail(email).then((user) => {
       // user exists // TODO: reroute them to log in if password is correct
       if (user) {
+        console.log('User already in db');
         return done(null, false, req.flash('signupMessage', 'That email is already taken.'));
       }
       // if there is no user with that email
@@ -59,6 +64,7 @@ module.exports = function(passport) {
           password: hash,
         };
         
+        console.log('Made new user');
         if (err) {
           console.log(err);
           return done(err, null);
@@ -76,6 +82,7 @@ module.exports = function(passport) {
       if (error) {
         return done(error);
       }
+    });
     });
   }
 
