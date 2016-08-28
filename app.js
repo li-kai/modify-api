@@ -1,11 +1,12 @@
 require('@risingstack/trace');
-const express = require('express');
 const path = require('path');
+const express = require('express');
 const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
+const flash    = require('connect-flash');
 const expressValidator = require('express-validator');    // context validation
-const passport = require('passport');   // passport for authentication
+const passport = require('passport');         // passport for authentication
 const session = require('express-session');   // session to save
 const RedisStore = require('connect-redis')(session);
 const config = require('./config');
@@ -23,6 +24,7 @@ app.use(cookieParser());
 
 app.use('/', routes);
 
+/*
 app.use(session({  
   store: new RedisStore({
     url: config.redisStore.url
@@ -31,16 +33,18 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
 }));
-
 app.use(passport.initialize());
 app.use(passport.session());
+*/
 
-app.get('/profile', passportLocal.authenticate('local'));
-app.get('/profile/callback', passportLocal.authenticate('local'),
-  function(req, res) {
-    // Successful authentication
-    res.json(req.user);
-});
+// required for passport
+app.use(session({ secret: 'ilovescotchscotchyscotchscotch' })); // session secret
+app.use(passport.initialize());
+app.use(passport.session()); // persistent login sessions
+app.use(flash()); // use connect-flash for flash messages stored in session
+
+// routes ======================================================================
+require('./app/routes.js')(app, passport); // load our routes and pass in our app and fully configured passport
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -117,10 +117,18 @@ function getModulesList(req, res, next) {
     });
 }
 
-
-
+function getSingleUser(email, password, done) {
+  db.one(sqlUpsertUser, {email, password})
+    .then((user) => {
+      return done(null, user);
+    })
+    .catch((error) => {
+      return done(error);
+    });
+}
 
 module.exports = {
   getSingleModule,
-  getModulesList
+  getModulesList,
+  getSingleUser,
 };

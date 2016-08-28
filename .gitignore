@@ -2,7 +2,5 @@
 scrapy/env
 scrapy/.scrapy
 scrapy/modify/user.py
-sql/db_login.js
 node_modules
-auth/_config.js
 config/index.js
