@@ -1,11 +1,13 @@
-const promise = require('bluebird');
+const Promise = require('bluebird');
 const path = require('path');
 const config = require('./config');
+const jwt              = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+
+Promise.config({ cancellation: true });
 
 // Initialization Options for pg-promise
-const options = {
-  promiseLib: promise
-};
+const options = { promiseLib:  Promise };
 
 // Connection Params for pg-promise
 const connectionParams = {
@@ -67,6 +69,9 @@ function respondWithErrors(errors, res) {
   res.statusCode = 400;
   return res.json(response);
 }
+
+const bcryptCompareAsync = Promise.promisify(bcrypt.compare);
+const jwtSignAsync = Promise.promisify(jwt.sign);
 
 function getSingleModule(req, res, next) {
   req.checkParams(checkSchema);
@@ -134,8 +139,33 @@ function getSingleUserById(id) {
   return db.one(sqlFindUserById, { id });
 }
 
-function getSingleUserByEmail(email) {
-  return db.oneOrNone(sqlFindUserByEmail, { email });
+function authenticateLocalUser(req, res, next) {
+  const email = req.body.email;
+  const password = req.body.password;
+  
+  const findUser = db.oneOrNone(sqlFindUserByEmail, { email });
+  const authenticateUser = findUser.then((user) => {
+    if (!user) {
+      return Promise.reject('Authentication failed. User not found.');
+    }
+    return bcryptCompareAsync(password, user.password);
+  });
+  
+  Promise.join(findUser, authenticateUser, (user, isPasswordCorrect) => {
+    if (!isPasswordCorrect) {
+      return Promise.reject('Authentication failed. Wrong password.');
+    }
+    // generate a json web token (jwt)
+    return jwtSignAsync({ id: user.id }, config.secret, { expiresIn: '1m' });
+  })
+  .then((token) => {
+    // if everything passes, output a token
+    // TODO: put token in cookie instead
+    res.json(token);
+  })
+  .catch((error) => {
+    res.status(401).json({ error });  // not authorized and output reason
+  });
 }
 
 function setSingleUser(email, password) {
@@ -146,7 +176,7 @@ module.exports = {
   getSingleModule,
   getModulesList,
   getSingleUserById,
-  getSingleUserByEmail,
+  authenticateLocalUser,
   setSingleUser,
   getUsersList,
 };

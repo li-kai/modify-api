@@ -9,11 +9,8 @@ router.get('/modulesList/:school/:year/:sem', db.getModulesList);
 
 router.get('/users', db.getUsersList);
 
-router.post('/signup', passport.authenticate('local-signup', {
-        successRedirect : '/profile', // redirect to the secure profile section
-        failureRedirect : '/signup', // redirect back to the signup page if there is an error
-        failureFlash : true // allow flash messages
-    }));
+router.post('/signup', passport.authenticate('local-signup'));
 
+router.post('/authenticate', db.authenticateLocalUser);
 
 module.exports = router;

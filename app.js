@@ -1,29 +1,19 @@
-const express = require('express');
-const path = require('path');
-const logger = require('morgan');
-const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser');
+const express          = require('express');
+const path             = require('path');
+const logger           = require('morgan');
+const cookieParser     = require('cookie-parser');
+const bodyParser       = require('body-parser');
 const expressValidator = require('express-validator');
-const routes = require('./routes/index');
-const passport = require('passport');
-const flash    = require('connect-flash');
-const session = require('express-session');
-
-require('./auth/passport.js')(passport);
+const routes           = require('./routes/index');
+const passport         = require('passport');
+const flash            = require('connect-flash');
+const session          = require('express-session');
 
 const app = express();
-
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(session({ 
-    resave: true,
-    saveUninitialized: true,
-    secret: 'hamster kitten fight' 
-}));
 app.use(passport.initialize());
-app.use(passport.session());
-app.use(flash()); // use connect-flash for flash messages stored in session
 
 app.use(expressValidator());
 app.use(cookieParser());
