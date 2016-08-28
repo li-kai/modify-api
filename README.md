@@ -11,17 +11,21 @@ RESTful API for Modify.sg
 http://api.modify.sg/modulesList/nus/2016/1/
 
 ```
-{
-	"ACC1002": "Financial Accounting",
-	"ACC1002X": "Financial Accounting",
-	"ACC2002": "Managerial Accounting",
-	...
-}
+[
+    "code": "ACC1002",
+    "title": "Financial Accounting"
+  },
+  {
+    "code": "ACC1006",
+    "title": "Accounting Information Systems"
+  },
+  ...
+]
 ```
 
 #### GET modules/&lt;School&gt;/&lt;AcadYear&gt;/&lt;Semester&gt;/&lt;ModuleCode&gt;
 
-https://api.modify.sg/modulesList/ntu/2016/1/AAA18C
+https://api.modify.sg/modules/ntu/2016/1/AAA18C
 
 ```
 {
