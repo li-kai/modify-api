@@ -36,7 +36,7 @@ with open('exams.csv', 'rb') as csvfile:
             date + time,
             '%d %B %Y%I.%M %p'
         )
-        code = row[3]
+        code = re.match(r'[A-Z0-9]+', row[3]).group(0)
         duration = timedelta(hours=float(row[5]))
 
         try:
