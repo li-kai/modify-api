@@ -1,4 +1,5 @@
 import psycopg2
+import re
 import csv
 from settings import DATABASE
 from datetime import datetime, timedelta
