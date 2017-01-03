@@ -1,11 +1,9 @@
 import psycopg2
 import csv
-from settings import DATABASE
+from settings import DATABASE, YEAR, SEM
 from datetime import datetime, timedelta
 
 school = 'NTU'
-year = 2016
-sem = 1
 with open('exams.csv', 'rb') as csvfile:
     try:
         connection = psycopg2.connect(
@@ -21,7 +19,7 @@ with open('exams.csv', 'rb') as csvfile:
             UPDATE modules SET exam_time = null, exam_duration = null
             WHERE school = %s AND year = %s AND sem = %s;
             ''',
-            (school, year, sem)
+            (school, YEAR, SEM)
         )
         connection.commit()
     except Exception, e:
@@ -46,7 +44,7 @@ with open('exams.csv', 'rb') as csvfile:
                 SET  exam_time = %s, exam_duration = %s
                 WHERE school = %s AND code = %s AND year = %s AND sem = %s;
                 ''',
-                (dateTime, duration, school, code, year, sem)
+                (dateTime, duration, school, code, YEAR, SEM)
             )
             # commit the change
             connection.commit()

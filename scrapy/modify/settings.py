@@ -10,6 +10,9 @@ import user
 #     http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 
 BOT_NAME = 'modify'
+YEAR = 2016
+SEM = 2
+
 LOG_LEVEL='INFO'
 SPIDER_MODULES = ['modify.spiders']
 

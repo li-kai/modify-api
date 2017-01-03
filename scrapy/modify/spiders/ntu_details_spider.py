@@ -1,17 +1,15 @@
 import scrapy
 from modify.items import Details, NtuDetailsLoader
-
+from settings import YEAR, SEM
 
 class NtuDetailsSpider(scrapy.Spider):
     name = "ntu_details"
     allowed_domains = ["wish.wis.ntu.edu.sg"]
-    year = 2016
-    sem = 1
     start_urls = [
         "https://wish.wis.ntu.edu.sg/webexe/owa/aus_subj_cont.main_display1?"
         "acad=%(year)s&semester=%(sem)s&acadsem=%(year)s;1&r_subj_code="
         "&boption=Search"
-        % {'year': year, "sem": sem}
+        % {'year': YEAR, "sem": SEM}
     ]
     custom_settings = {
         'ITEM_PIPELINES': {
@@ -38,8 +36,8 @@ class NtuDetailsSpider(scrapy.Spider):
             # first row contains code, title
             # credit and department
             firstRow = mod[0].xpath('.//font/text()').extract()
-            loader.add_value('year', self.year)
-            loader.add_value('sem', self.sem)
+            loader.add_value('year', YEAR)
+            loader.add_value('sem', SEM)
             loader.add_value('code', firstRow[0])
             loader.add_value('title', firstRow[1])
             loader.add_value('credit', firstRow[2])

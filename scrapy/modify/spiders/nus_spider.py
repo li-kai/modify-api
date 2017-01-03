@@ -2,16 +2,14 @@ import scrapy
 import json
 from modify.items import (
     NusModule, NusLoader, LessonLoader, Lesson)
-
+from settings import YEAR, SEM
 
 class NusDetailsSpider(scrapy.Spider):
     name = "nus_details"
     allowed_domains = ["api.nusmods.com"]
-    year = 2016
-    sem = 1
     start_urls = [
         "http://api.nusmods.com/%(year_one)s-%(year_two)s/%(sem)s/modules.json"
-        % {'year_one': year, 'year_two': year + 1, "sem": sem}
+        % {'year_one': YEAR, 'year_two': YEAR + 1, "sem": SEM}
     ]
     custom_settings = {
         'ITEM_PIPELINES': {
@@ -25,8 +23,8 @@ class NusDetailsSpider(scrapy.Spider):
 
     def parseDetails(self, mod, loader):
         # each mod is a module
-        loader.add_value('year', self.year)
-        loader.add_value('sem', self.sem)
+        loader.add_value('year', YEAR)
+        loader.add_value('sem', SEM)
         loader.add_value('code', mod['ModuleCode'])
         loader.add_value('title', mod['ModuleTitle'])
         loader.add_value('credit', mod['ModuleCredit'])
