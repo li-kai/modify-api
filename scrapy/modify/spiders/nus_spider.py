@@ -2,7 +2,7 @@ import scrapy
 import json
 from modify.items import (
     NusModule, NusLoader, LessonLoader, Lesson)
-from settings import YEAR, SEM
+from modify.settings import YEAR, SEM
 
 class NusDetailsSpider(scrapy.Spider):
     name = "nus_details"

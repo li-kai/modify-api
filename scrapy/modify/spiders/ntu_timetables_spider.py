@@ -1,7 +1,7 @@
 import scrapy
 from modify.items import (NtuTimetables, NtuTimetablesLoader,
                           Lesson, LessonLoader)
-from settings import YEAR, SEM
+from modify.settings import YEAR, SEM
 
 class NtuTimetablesSpider(scrapy.Spider):
     name = "ntu_timetables"

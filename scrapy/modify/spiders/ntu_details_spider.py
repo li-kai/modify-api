@@ -1,6 +1,6 @@
 import scrapy
 from modify.items import Details, NtuDetailsLoader
-from settings import YEAR, SEM
+from modify.settings import YEAR, SEM
 
 class NtuDetailsSpider(scrapy.Spider):
     name = "ntu_details"
